@@ -1,4 +1,4 @@
-const CACHE = 'feather-markdown-v1';
+const CACHE = 'feather-markdown-v3';
 const SHELL = ['/', '/app.css', '/app.js', '/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', event => {
@@ -15,6 +15,18 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || event.request.url.includes('/api/')) return;
+
+  const requestURL = new URL(event.request.url);
+  if (requestURL.origin === self.location.origin) {
+    event.respondWith(
+      fetch(event.request).then(response => {
+        if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
+        return response;
+      }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then(cached => {
       const network = fetch(event.request).then(response => {
