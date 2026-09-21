@@ -217,6 +217,19 @@ func main() {
     }
   }
 
+  function prepareScrollableTables() {
+    elements.preview.querySelectorAll('table').forEach(table => {
+      if (table.parentElement?.classList.contains('table-scroll')) return;
+      const scroller = document.createElement('div');
+      scroller.className = 'table-scroll';
+      scroller.tabIndex = 0;
+      scroller.setAttribute('role', 'region');
+      scroller.setAttribute('aria-label', '可横向滚动的表格');
+      table.before(scroller);
+      scroller.append(table);
+    });
+  }
+
   async function render() {
     const sequence = ++state.renderSequence;
     let html;
@@ -228,6 +241,7 @@ func main() {
     elements.preview.innerHTML = window.DOMPurify
       ? window.DOMPurify.sanitize(html, { USE_PROFILES: { html: true } })
       : html;
+    prepareScrollableTables();
     buildOutline();
     await renderEnhancements(sequence);
   }
