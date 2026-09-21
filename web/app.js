@@ -50,6 +50,7 @@ func main() {
   const $ = selector => document.querySelector(selector);
   const elements = {
     editor: $('#editor'),
+    editorPanel: $('#editor-panel'),
     preview: $('#preview'),
     previewPanel: $('#preview-panel'),
     outline: $('#outline'),
@@ -63,6 +64,8 @@ func main() {
     toast: $('#toast'),
     fileInput: $('#file-input'),
     themeButton: $('#theme-button'),
+    editorToggleButton: $('#editor-toggle-button'),
+    mobileTabs: $('.mobile-tabs'),
     workspace: $('.workspace')
   };
 
@@ -371,28 +374,59 @@ func main() {
     const start = editor.selectionStart;
     const end = editor.selectionEnd;
     const selected = editor.value.slice(start, end);
-    const lineStart = editor.value.lastIndexOf('\n', start - 1) + 1;
+
+    const lineFormats = {
+      heading1: { placeholder: '一级标题', transform: line => `# ${line.replace(/^#{1,6}\s+/, '')}` },
+      heading2: { placeholder: '二级标题', transform: line => `## ${line.replace(/^#{1,6}\s+/, '')}` },
+      heading3: { placeholder: '三级标题', transform: line => `### ${line.replace(/^#{1,6}\s+/, '')}` },
+      quote: { placeholder: '引用内容', transform: line => `> ${line.replace(/^>\s?/, '')}` },
+      unorderedList: { placeholder: '列表项', transform: line => `- ${line.replace(/^\s*(?:[-*+]|\d+\.)\s+(?:\[[ xX]\]\s+)?/, '')}` },
+      orderedList: { placeholder: '列表项', transform: (line, index) => `${index + 1}. ${line.replace(/^\s*(?:[-*+]|\d+\.)\s+(?:\[[ xX]\]\s+)?/, '')}` },
+      taskList: { placeholder: '待办事项', transform: line => `- [ ] ${line.replace(/^\s*(?:[-*+]|\d+\.)\s+(?:\[[ xX]\]\s+)?/, '')}` }
+    };
+
+    if (lineFormats[format]) {
+      const lineStart = editor.value.lastIndexOf('\n', start - 1) + 1;
+      const nextBreak = editor.value.indexOf('\n', end);
+      const lineEnd = nextBreak === -1 ? editor.value.length : nextBreak;
+      const rule = lineFormats[format];
+      const source = editor.value.slice(lineStart, lineEnd) || rule.placeholder;
+      const replacement = source.split('\n').map(rule.transform).join('\n');
+      editor.setRangeText(replacement, lineStart, lineEnd, 'select');
+      editor.focus();
+      onEditorInput();
+      return;
+    }
+
     const formats = {
-      heading: ['## ', '', '小节标题'],
       bold: ['**', '**', '粗体文字'],
       italic: ['*', '*', '斜体文字'],
+      strike: ['~~', '~~', '删除线文字'],
       code: ['`', '`', 'code'],
       link: ['[', '](https://example.com)', '链接文字'],
-      quote: ['> ', '', '引用内容'],
-      list: ['- ', '', '列表项'],
+      image: ['![', '](https://example.com/image.png)', '图片说明'],
+      codeblock: ['```\n', '\n```', '代码'],
+      table: ['', '', '| 列一 | 列二 | 列三 |\n| --- | --- | --- |\n| 内容 | 内容 | 内容 |'],
+      horizontalRule: ['\n\n', '\n\n', '---'],
       math: ['$$\n', '\n$$', 'E = mc^2'],
       mermaid: ['```mermaid\n', '\n```', 'flowchart LR\n    A[开始] --> B[完成]']
     };
-    let [before, after, placeholder] = formats[format];
-    let replaceStart = start;
-    if (['heading', 'quote', 'list'].includes(format) && start === end) replaceStart = lineStart;
+    const [before, after, placeholder] = formats[format];
     const content = selected || placeholder;
-    editor.setRangeText(before + content + after, replaceStart, end, 'end');
-    if (!selected) {
-      editor.selectionStart = replaceStart + before.length;
-      editor.selectionEnd = editor.selectionStart + placeholder.length;
+    const replacement = before + content + after;
+    editor.setRangeText(replacement, start, end, 'end');
+    if (!selected && placeholder) {
+      const placeholderStart = start + replacement.indexOf(placeholder);
+      editor.selectionStart = placeholderStart;
+      editor.selectionEnd = placeholderStart + placeholder.length;
     }
     editor.focus();
+    onEditorInput();
+  }
+
+  function runEditorCommand(command) {
+    elements.editor.focus();
+    document.execCommand(command);
     onEditorInput();
   }
 
@@ -419,6 +453,27 @@ func main() {
       tab.classList.toggle('active', active);
       tab.setAttribute('aria-selected', String(active));
     });
+  }
+
+  function setEditorVisible(visible, persist = true) {
+    elements.editorPanel.classList.toggle('hidden', !visible);
+    elements.workspace.classList.toggle('editor-collapsed', !visible);
+    elements.editorToggleButton.setAttribute('aria-pressed', String(visible));
+    elements.editorToggleButton.title = visible
+      ? '隐藏编辑器 (Ctrl+Shift+E)'
+      : '显示编辑器 (Ctrl+Shift+E)';
+    const editorTab = document.querySelector('.mobile-tab[data-pane="editor"]');
+    editorTab.classList.toggle('hidden', !visible);
+    elements.mobileTabs.classList.toggle('editor-hidden', !visible);
+    if (!visible && document.body.dataset.mobilePane === 'editor') setMobilePane('preview');
+    if (persist) localStorage.setItem('feather.editorVisible', String(visible));
+  }
+
+  function toggleEditor() {
+    const show = elements.editorPanel.classList.contains('hidden');
+    setEditorVisible(show);
+    if (show && window.innerWidth <= 900) setMobilePane('editor');
+    showToast(show ? '已显示编辑器' : '已切换到阅读模式');
   }
 
   function onEditorInput() {
@@ -462,9 +517,13 @@ func main() {
       elements.outlinePanel.classList.toggle('hidden');
       elements.workspace.classList.toggle('outline-collapsed', elements.outlinePanel.classList.contains('hidden'));
     });
+    elements.editorToggleButton.addEventListener('click', toggleEditor);
     elements.themeButton.addEventListener('click', cycleTheme);
     document.querySelectorAll('[data-format]').forEach(button => {
       button.addEventListener('click', () => insertFormat(button.dataset.format));
+    });
+    document.querySelectorAll('[data-command]').forEach(button => {
+      button.addEventListener('click', () => runEditorCommand(button.dataset.command));
     });
     document.querySelectorAll('.mobile-tab').forEach(tab => {
       tab.addEventListener('click', () => setMobilePane(tab.dataset.pane));
@@ -481,6 +540,9 @@ func main() {
       } else if (modifier && event.key.toLowerCase() === 'n') {
         event.preventDefault();
         $('#new-button').click();
+      } else if (modifier && event.shiftKey && event.key.toLowerCase() === 'e') {
+        event.preventDefault();
+        toggleEditor();
       } else if (event.key === 'Tab' && document.activeElement === elements.editor) {
         event.preventDefault();
         elements.editor.setRangeText('  ', elements.editor.selectionStart, elements.editor.selectionEnd, 'end');
@@ -495,7 +557,9 @@ func main() {
 
   async function initialise() {
     applyTheme(localStorage.getItem('feather.theme') || 'system');
-    setMobilePane('editor');
+    const editorVisible = localStorage.getItem('feather.editorVisible') !== 'false';
+    setEditorVisible(editorVisible, false);
+    setMobilePane(editorVisible ? 'editor' : 'preview');
     bindEvents();
     const hasServerDocument = await loadServerDocument(true);
     if (!hasServerDocument) {
