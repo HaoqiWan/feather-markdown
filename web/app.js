@@ -65,9 +65,18 @@ func main() {
     fileInput: $('#file-input'),
     themeButton: $('#theme-button'),
     editorToggleButton: $('#editor-toggle-button'),
+    outlineResizer: $('#outline-resizer'),
+    editorResizer: $('#editor-resizer'),
     mobileTabs: $('.mobile-tabs'),
     workspace: $('.workspace')
   };
+
+  const PANEL_SIZES = {
+    outline: { property: '--outline-width', storage: 'feather.outlineWidth', minimum: 150, initial: 220 },
+    editor: { property: '--editor-width', storage: 'feather.editorWidth', minimum: 220, initial: 420 }
+  };
+  const PREVIEW_MINIMUM = 260;
+  const RESIZER_WIDTH = 7;
 
   const state = {
     name: '未命名.md',
@@ -446,6 +455,120 @@ func main() {
     onEditorInput();
   }
 
+  function panelIsVisible(panel) {
+    return !panel.classList.contains('hidden');
+  }
+
+  function preferredPanelWidth(kind) {
+    const config = PANEL_SIZES[kind];
+    const inlineValue = parseFloat(elements.workspace.style.getPropertyValue(config.property));
+    if (Number.isFinite(inlineValue)) return inlineValue;
+    const panel = kind === 'outline' ? elements.outlinePanel : elements.editorPanel;
+    return panel.getBoundingClientRect().width || config.initial;
+  }
+
+  function panelWidthBounds(kind) {
+    const workspaceWidth = elements.workspace.getBoundingClientRect().width;
+    const outlineVisible = panelIsVisible(elements.outlinePanel);
+    const editorVisible = panelIsVisible(elements.editorPanel);
+    const dividerCount = Number(outlineVisible) + Number(editorVisible);
+    let otherWidth = 0;
+
+    if (kind === 'outline' && editorVisible) {
+      otherWidth = Math.max(PANEL_SIZES.editor.minimum, elements.editorPanel.getBoundingClientRect().width);
+    } else if (kind === 'editor' && outlineVisible) {
+      otherWidth = Math.max(PANEL_SIZES.outline.minimum, elements.outlinePanel.getBoundingClientRect().width);
+    }
+
+    const minimum = PANEL_SIZES[kind].minimum;
+    const maximum = Math.max(minimum, workspaceWidth - PREVIEW_MINIMUM - otherWidth - dividerCount * RESIZER_WIDTH);
+    return { minimum, maximum };
+  }
+
+  function updateResizerAccessibility(kind, width) {
+    const resizer = kind === 'outline' ? elements.outlineResizer : elements.editorResizer;
+    const bounds = panelWidthBounds(kind);
+    resizer.setAttribute('aria-valuemin', String(bounds.minimum));
+    resizer.setAttribute('aria-valuemax', String(Math.round(bounds.maximum)));
+    resizer.setAttribute('aria-valuenow', String(Math.round(width)));
+  }
+
+  function setPanelWidth(kind, requestedWidth, persist = false) {
+    const config = PANEL_SIZES[kind];
+    const bounds = panelWidthBounds(kind);
+    const width = Math.min(bounds.maximum, Math.max(bounds.minimum, requestedWidth));
+    elements.workspace.style.setProperty(config.property, `${Math.round(width)}px`);
+    updateResizerAccessibility(kind, width);
+    if (persist) localStorage.setItem(config.storage, String(Math.round(width)));
+    return width;
+  }
+
+  function restorePanelWidths() {
+    Object.entries(PANEL_SIZES).forEach(([kind, config]) => {
+      const saved = Number(localStorage.getItem(config.storage));
+      const width = Number.isFinite(saved) && saved >= config.minimum ? saved : config.initial;
+      elements.workspace.style.setProperty(config.property, `${Math.round(width)}px`);
+      const resizer = kind === 'outline' ? elements.outlineResizer : elements.editorResizer;
+      resizer.setAttribute('aria-valuenow', String(Math.round(width)));
+    });
+  }
+
+  function constrainPanelWidths() {
+    if (window.innerWidth <= 900) return;
+    if (panelIsVisible(elements.outlinePanel)) setPanelWidth('outline', preferredPanelWidth('outline'));
+    if (panelIsVisible(elements.editorPanel)) setPanelWidth('editor', preferredPanelWidth('editor'));
+  }
+
+  function bindPanelResizer(resizer, kind) {
+    const panel = kind === 'outline' ? elements.outlinePanel : elements.editorPanel;
+
+    resizer.addEventListener('pointerdown', event => {
+      if (window.innerWidth <= 900 || event.button !== 0) return;
+      event.preventDefault();
+      const startX = event.clientX;
+      const startWidth = panel.getBoundingClientRect().width;
+      resizer.setPointerCapture(event.pointerId);
+      resizer.classList.add('active');
+      elements.workspace.classList.add('is-resizing');
+
+      const move = moveEvent => {
+        setPanelWidth(kind, startWidth + moveEvent.clientX - startX);
+      };
+      const finish = finishEvent => {
+        if (resizer.hasPointerCapture(finishEvent.pointerId)) resizer.releasePointerCapture(finishEvent.pointerId);
+        resizer.classList.remove('active');
+        elements.workspace.classList.remove('is-resizing');
+        setPanelWidth(kind, panel.getBoundingClientRect().width, true);
+        resizer.removeEventListener('pointermove', move);
+        resizer.removeEventListener('pointerup', finish);
+        resizer.removeEventListener('pointercancel', finish);
+      };
+
+      resizer.addEventListener('pointermove', move);
+      resizer.addEventListener('pointerup', finish);
+      resizer.addEventListener('pointercancel', finish);
+    });
+
+    resizer.addEventListener('keydown', event => {
+      if (window.innerWidth <= 900) return;
+      const bounds = panelWidthBounds(kind);
+      const step = event.shiftKey ? 48 : 16;
+      let nextWidth;
+      if (event.key === 'ArrowLeft') nextWidth = panel.getBoundingClientRect().width - step;
+      else if (event.key === 'ArrowRight') nextWidth = panel.getBoundingClientRect().width + step;
+      else if (event.key === 'Home') nextWidth = bounds.minimum;
+      else if (event.key === 'End') nextWidth = bounds.maximum;
+      else return;
+      event.preventDefault();
+      setPanelWidth(kind, nextWidth, true);
+    });
+
+    resizer.addEventListener('dblclick', () => {
+      setPanelWidth(kind, PANEL_SIZES[kind].initial, true);
+      showToast(kind === 'outline' ? '已恢复大纲默认宽度' : '已恢复编辑器默认宽度');
+    });
+  }
+
   function runEditorCommand(command) {
     elements.editor.focus();
     document.execCommand(command);
@@ -489,6 +612,7 @@ func main() {
     elements.mobileTabs.classList.toggle('editor-hidden', !visible);
     if (!visible && document.body.dataset.mobilePane === 'editor') setMobilePane('preview');
     if (persist) localStorage.setItem('feather.editorVisible', String(visible));
+    requestAnimationFrame(constrainPanelWidths);
   }
 
   function toggleEditor() {
@@ -538,6 +662,7 @@ func main() {
     $('#outline-button').addEventListener('click', () => {
       elements.outlinePanel.classList.toggle('hidden');
       elements.workspace.classList.toggle('outline-collapsed', elements.outlinePanel.classList.contains('hidden'));
+      requestAnimationFrame(constrainPanelWidths);
     });
     elements.editorToggleButton.addEventListener('click', toggleEditor);
     elements.themeButton.addEventListener('click', cycleTheme);
@@ -550,6 +675,9 @@ func main() {
     document.querySelectorAll('.mobile-tab').forEach(tab => {
       tab.addEventListener('click', () => setMobilePane(tab.dataset.pane));
     });
+    bindPanelResizer(elements.outlineResizer, 'outline');
+    bindPanelResizer(elements.editorResizer, 'editor');
+    window.addEventListener('resize', debounce(constrainPanelWidths, 80));
 
     document.addEventListener('keydown', event => {
       const modifier = event.ctrlKey || event.metaKey;
@@ -579,6 +707,7 @@ func main() {
 
   async function initialise() {
     applyTheme(localStorage.getItem('feather.theme') || 'system');
+    restorePanelWidths();
     const editorVisible = localStorage.getItem('feather.editorVisible') === 'true';
     setEditorVisible(editorVisible, false);
     setMobilePane(editorVisible ? 'editor' : 'preview');
