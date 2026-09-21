@@ -23,13 +23,25 @@ try {
     $env:GOOS = $target.OS
     $env:GOARCH = $target.Arch
     $env:CGO_ENABLED = "0"
-    $output = Join-Path $dist ("feather-markdown-{0}-{1}{2}" -f $target.OS, $target.Arch, $target.Ext)
-    go build -trimpath -buildvcs=false -ldflags "-s -w -buildid= -X main.version=$Version" -o $output .
+    if ($target.OS -eq "darwin") {
+      $appBundle = Join-Path $dist ("Feather Markdown-{0}.app" -f $target.Arch)
+      $macOSDirectory = Join-Path $appBundle "Contents\MacOS"
+      New-Item -ItemType Directory -Force -Path $macOSDirectory | Out-Null
+      Copy-Item -Force (Join-Path $projectRoot "packaging\macos\Info.plist") (Join-Path $appBundle "Contents\Info.plist")
+      $output = Join-Path $macOSDirectory "FeatherMarkdown"
+    }
+    else {
+      $output = Join-Path $dist ("feather-markdown-{0}-{1}{2}" -f $target.OS, $target.Arch, $target.Ext)
+    }
+    $linkerFlags = "-s -w -buildid= -X main.version=$Version"
+    if ($target.OS -eq "windows") { $linkerFlags += " -H=windowsgui" }
+    go build -trimpath -buildvcs=false -ldflags $linkerFlags -o $output .
     $size = (Get-Item -LiteralPath $output).Length
     if ($size -gt $maximum) {
       throw "$(Split-Path -Leaf $output) is $([math]::Round($size / 1MB, 2)) MiB; limit is 10 MiB"
     }
-    Write-Host "$(Split-Path -Leaf $output): $([math]::Round($size / 1MB, 2)) MiB"
+    $label = if ($target.OS -eq "darwin") { "Feather Markdown-$($target.Arch).app" } else { Split-Path -Leaf $output }
+    Write-Host "${label}: $([math]::Round($size / 1MB, 2)) MiB"
   }
 }
 finally {

@@ -1,6 +1,6 @@
 # Feather Markdown
 
-一个以 **轻量** 为第一目标的 Markdown 阅读与编辑器。Go 服务端零第三方依赖，发布包设有 **10 MiB 硬门禁**；界面可作为 PWA 运行在 Windows、macOS、iOS 和 Android。
+一个以 **轻量** 为第一目标的 Markdown 阅读与编辑器。Windows 使用系统 WebView2、macOS 使用系统 WKWebView，双击后直接打开独立应用窗口，不显示浏览器地址栏。每个平台的发布包都有 **10 MiB 硬门禁**。
 
 ## 功能
 
@@ -12,12 +12,13 @@
 - Mermaid 流程图、时序图、状态图等
 - 从浏览器打开/保存 Markdown，内容自动保存在本机
 - 使用 `-file` 时自动保存指定磁盘文件，并每 1.2 秒感知外部更新
-- 可安装 PWA，窄屏下提供编辑、预览、大纲三个独立视图
+- Windows 原生 `.exe` 与 macOS `.app` 独立窗口
+- iOS/Android 可安装应用，窄屏下提供编辑、预览、大纲三个独立视图
 - Markdown HTML 经 DOMPurify 清理，Mermaid 使用严格安全模式
 
 ## 运行
 
-从 [Releases](../../releases) 下载当前平台的单文件程序，双击运行，或在终端执行：
+从 [Releases](../../releases) 下载当前平台程序。Windows 双击 `.exe`，macOS 打开 `Feather Markdown.app`；两者都会显示独立应用窗口。
 
 ```powershell
 ./feather-markdown-windows-amd64.exe
@@ -29,12 +30,13 @@
 ./feather-markdown-windows-amd64.exe -file README.md
 ```
 
-默认地址是 `http://127.0.0.1:4587`。可用参数：
+程序在内部自动选择一个空闲的本地端口。可用参数：
 
 ```text
--addr string   监听地址（默认 127.0.0.1:4587）
+-addr string   内部监听地址（默认 127.0.0.1:0，自动选空闲端口）
+-browser       改用默认浏览器运行（仅用于调试或局域网共享）
+-debug         启用桌面 WebView 开发者工具
 -file string   要打开、监听和保存的 Markdown 文件
--open          启动后打开浏览器（默认 true）
 -version       显示版本
 ```
 
@@ -42,10 +44,10 @@
 
 移动端有两种用法：
 
-1. 在同一局域网的电脑上运行 `feather-markdown -addr 0.0.0.0:4587`，手机访问 `http://电脑IP:4587`。
+1. 在同一局域网的电脑上运行 `feather-markdown -browser -addr 0.0.0.0:4587`，手机访问 `http://电脑IP:4587`。
 2. 将 `web/` 目录部署到任意 HTTPS 静态托管，在 Safari/Chrome 中“添加到主屏幕”。纯静态模式使用浏览器本地存储及打开/下载文件，不依赖 Go API。
 
-第二种方式的安装体验最好。iOS/Android 端不捆绑 WebView，因此安装体积仍然很小。
+第二种方式会从主屏幕以无地址栏的独立窗口启动。移动端不捆绑浏览器内核，因此安装体积仍然很小。
 
 ## 从源码构建
 
@@ -76,14 +78,16 @@ go test ./...
 
 ## 体积策略
 
-Go 程序采用 `-trimpath -ldflags="-s -w -buildid="` 构建。Marked、DOMPurify、KaTeX 和 Mermaid 固定版本并由 CDN 首次加载，Service Worker 随后缓存，因此它们不会膨胀发布程序；第一次完整渲染这些扩展需要联网。CDN 暂不可用时，编辑器仍会显示内置基础预览。
+Go 程序采用 `-trimpath -ldflags="-s -w -buildid="` 构建，并复用系统 WebView，不打包 Chromium。Marked、DOMPurify、KaTeX 和 Mermaid 固定版本并由 CDN 首次加载，Service Worker 随后缓存，因此它们不会膨胀发布程序；第一次完整渲染这些扩展需要联网。CDN 暂不可用时，编辑器仍会显示内置基础预览。
 
 ## 技术结构
 
 ```text
-main.go            Go HTTP 服务、文件读写、静态资源嵌入
+main.go            Go HTTP 服务、文件读写、应用生命周期
+desktop_supported.go  Windows/macOS/Linux 原生窗口入口
 web/app.js         编辑、渲染、大纲、主题、文件与 PWA 逻辑
 web/app.css        桌面/移动响应式界面与阅读主题
 web/service-worker.js
-scripts/           跨平台构建及 10 MiB 门禁
+packaging/         macOS .app 元数据
+scripts/           原生程序构建及 10 MiB 门禁
 ```

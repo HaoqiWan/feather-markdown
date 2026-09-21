@@ -1,0 +1,4 @@
+github.com/ebitengine/purego v0.10.1 h1:dewVBCBT2GaMu1SrNTYxQhgQBethzfhiwvZiLGP/qyY=
+github.com/ebitengine/purego v0.10.1/go.mod h1:iIjxzd6CiRiOG0UyXP+V1+jWqUXVjPKLAI0mRfJZTmQ=
+github.com/moxcomic/go-webview v0.0.0-20260607144546-7391706e06ab h1:b+3pZvlFnpMb3qU/pIAqrVO9Mqyym0VJabliGVtN+xE=
+github.com/moxcomic/go-webview v0.0.0-20260607144546-7391706e06ab/go.mod h1:7drtCyUopf0DgHzzhCPebsJEIuSqAE8R2K7ta52xqKA=

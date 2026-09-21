@@ -48,11 +48,15 @@ type app struct {
 }
 
 func main() {
-	addr := flag.String("addr", "127.0.0.1:4587", "listen address")
+	addr := flag.String("addr", "127.0.0.1:0", "internal listen address")
 	document := flag.String("file", "", "Markdown file to watch and save")
-	open := flag.Bool("open", true, "open the reader in the default browser")
+	browser := flag.Bool("browser", false, "run in the default browser instead of a desktop window")
+	debug := flag.Bool("debug", false, "enable desktop webview developer tools")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
+	if *document == "" && flag.NArg() > 0 {
+		*document = flag.Arg(0)
+	}
 
 	if *showVersion {
 		fmt.Println("Feather Markdown", version)
@@ -84,7 +88,7 @@ func main() {
 		log.Printf("watching %s", filePath)
 	}
 
-	if *open {
+	if *browser {
 		go func() {
 			time.Sleep(120 * time.Millisecond)
 			if err := openBrowser(url); err != nil {
@@ -93,15 +97,26 @@ func main() {
 		}()
 	}
 
+	serverErrors := make(chan error, 1)
 	go func() {
 		if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Printf("server: %v", err)
+			serverErrors <- err
 		}
 	}()
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	<-stop
+	if *browser {
+		stop := make(chan os.Signal, 1)
+		signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+		select {
+		case <-stop:
+		case err := <-serverErrors:
+			log.Printf("server: %v", err)
+		}
+	} else if err := runDesktop(url, *debug); err != nil {
+		_ = server.Close()
+		log.Fatal(err)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_ = server.Shutdown(ctx)
