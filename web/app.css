@@ -101,6 +101,7 @@ button { color: inherit; }
 .button.primary:hover { filter: brightness(1.05); background: var(--accent); }
 .icon-button { width: 34px; height: 34px; font-size: 18px; }
 .icon-button[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
+.editor-toggle[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); border-color: var(--line); }
 
 .workspace {
   height: calc(100vh - var(--topbar));
@@ -187,6 +188,7 @@ button { color: inherit; }
   .save-state { display: none; }
   .button { width: 34px; padding: 0; overflow: hidden; font-size: 0; }
   .button span { font-size: 16px; }
+  .button .button-label { display: none; }
   .mobile-tabs { height: 42px; display: grid; grid-template-columns: repeat(3, 1fr); padding: 4px; border-bottom: 1px solid var(--line); background: var(--surface); }
   .mobile-tabs.editor-hidden { grid-template-columns: repeat(2, 1fr); }
   .mobile-tab { color: var(--muted); font-size: 12px; }

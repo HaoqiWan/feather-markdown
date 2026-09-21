@@ -1,0 +1,50 @@
+plugins {
+    id 'com.android.application'
+}
+
+def releaseKeystore = System.getenv('ANDROID_KEYSTORE_PATH')
+def appVersionName = System.getenv('APP_VERSION') ?: '0.3.0'
+def appVersionCode = (System.getenv('APP_VERSION_CODE') ?: '3').toInteger()
+
+android {
+    namespace 'com.haoqiwan.feathermarkdown'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.haoqiwan.feathermarkdown'
+        minSdk 24
+        targetSdk 35
+        versionCode appVersionCode
+        versionName appVersionName
+    }
+
+    sourceSets {
+        main.assets.srcDirs = ['../../../web']
+    }
+
+    if (releaseKeystore) {
+        signingConfigs {
+            release {
+                storeFile file(releaseKeystore)
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+                storeType System.getenv('ANDROID_KEYSTORE_TYPE') ?: 'PKCS12'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (releaseKeystore) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

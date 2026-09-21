@@ -3,7 +3,7 @@
 
   const SAMPLE = `# 欢迎使用 Feather Markdown
 
-一个不到 10MB 的轻量 Markdown 阅读与编辑器。左侧是大纲，中间编辑，右侧会实时刷新。
+一个不到 10MB 的轻量 Markdown 阅读与编辑器。默认显示左侧大纲与右侧预览，点击顶部铅笔按钮即可打开编辑器。
 
 ## 常用 Markdown
 
@@ -305,6 +305,14 @@ func main() {
 
   async function openDocument() {
     try {
+      if (window.FeatherNative?.openDocument) {
+        window.FeatherNative.openDocument();
+        return;
+      }
+      if (window.webkit?.messageHandlers?.featherOpen) {
+        window.webkit.messageHandlers.featherOpen.postMessage(null);
+        return;
+      }
       if ('showOpenFilePicker' in window) {
         const [handle] = await window.showOpenFilePicker({
           types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md', '.markdown', '.mdown', '.mkd'] } }],
@@ -328,6 +336,20 @@ func main() {
       if (state.serverBacked) {
         await saveToServer();
         showToast('已保存到磁盘');
+        return;
+      }
+      if (window.FeatherNative?.saveDocument) {
+        window.FeatherNative.saveDocument(state.name, elements.editor.value);
+        state.lastSaved = elements.editor.value;
+        updateStatus();
+        showToast('请选择保存位置');
+        return;
+      }
+      if (window.webkit?.messageHandlers?.featherSave) {
+        window.webkit.messageHandlers.featherSave.postMessage({ name: state.name, content: elements.editor.value });
+        state.lastSaved = elements.editor.value;
+        updateStatus();
+        showToast('请选择保存位置');
         return;
       }
       if (state.handle) {
@@ -557,7 +579,7 @@ func main() {
 
   async function initialise() {
     applyTheme(localStorage.getItem('feather.theme') || 'system');
-    const editorVisible = localStorage.getItem('feather.editorVisible') !== 'false';
+    const editorVisible = localStorage.getItem('feather.editorVisible') === 'true';
     setEditorVisible(editorVisible, false);
     setMobilePane(editorVisible ? 'editor' : 'preview');
     bindEvents();
@@ -569,11 +591,20 @@ func main() {
     state.pollTimer = setInterval(() => {
       if (state.serverBacked) loadServerDocument(false);
     }, 1200);
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+    }
     if (!window.marked || !window.DOMPurify) {
       showToast('渲染组件未加载，已启用基础预览；联网后刷新即可');
     }
   }
+
+  window.featherLoadDocument = (content, name) => {
+    state.handle = null;
+    state.serverBacked = false;
+    setDocument(String(content || ''), String(name || '未命名.md'), true);
+    showToast('文档已打开');
+  };
 
   initialise();
 })();

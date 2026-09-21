@@ -5,7 +5,7 @@
 ## 功能
 
 - 编辑即预览，约 140ms 防抖刷新
-- 一键隐藏编辑器进入纯阅读模式，并记住显示偏好
+- 默认显示导航与预览；点击铅笔按钮打开编辑器，并记住显示偏好
 - 自动生成文档大纲，点击标题即可导航
 - 浅色、深色、跟随系统三种主题
 - 内置编辑器与扩展格式工具栏：标题、强调、列表、任务、图片、代码块、表格、分隔线、公式和 Mermaid
@@ -43,12 +43,23 @@
 
 ## iOS / Android
 
-移动端有两种用法：
+GitHub Releases 为移动端提供独立应用包：
 
-1. 在同一局域网的电脑上运行 `feather-markdown -browser -addr 0.0.0.0:4587`，手机访问 `http://电脑IP:4587`。
-2. 将 `web/` 目录部署到任意 HTTPS 静态托管，在 Safari/Chrome 中“添加到主屏幕”。纯静态模式使用浏览器本地存储及打开/下载文件，不依赖 Go API。
+- Android：下载 `.apk` 直接安装，或下载包含 APK 与说明的 `android-app.zip`。APK 使用项目固定密钥签名，可覆盖升级。
+- iOS：提供未签名 `.ipa` 和应用 `.zip`。受 Apple 平台限制，需要使用自己的 Apple 开发者证书签名，或通过侧载工具重签后安装。
 
-第二种方式会从主屏幕以无地址栏的独立窗口启动。移动端不捆绑浏览器内核，因此安装体积仍然很小。
+移动端分别使用 Android WebView 和 iOS WKWebView，均为无浏览器地址栏的独立应用，并支持本机文件打开与保存。
+
+## Release 文件
+
+每个版本固定发布 8 个文件：
+
+| 平台 | 程序压缩包 | 安装包 |
+| --- | --- | --- |
+| Windows | `windows-x64-portable.zip` | `windows-x64-setup.exe` |
+| macOS | `macos-universal-app.zip` | `macos-universal.dmg` |
+| Android | `android-app.zip` | `android.apk` |
+| iOS | `ios-app-unsigned.zip` | `ios-unsigned.ipa` |
 
 ## 从源码构建
 
@@ -91,5 +102,7 @@ web/app.js         编辑、渲染、大纲、主题、文件与 PWA 逻辑
 web/app.css        桌面/移动响应式界面与阅读主题
 web/service-worker.js
 packaging/         macOS .app 元数据
+mobile/android/    Android 原生 WebView 应用
+mobile/ios/        iOS Swift/WKWebView 应用
 scripts/           原生程序构建及 10 MiB 门禁
 ```

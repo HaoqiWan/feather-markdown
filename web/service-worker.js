@@ -1,4 +1,4 @@
-const CACHE = 'feather-markdown-v3';
+const CACHE = 'feather-markdown-v4';
 const SHELL = ['/', '/app.css', '/app.js', '/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', event => {

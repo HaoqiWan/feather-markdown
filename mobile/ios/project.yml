@@ -1,0 +1,35 @@
+name: FeatherMarkdown
+options:
+  bundleIdPrefix: com.haoqiwan
+  deploymentTarget:
+    iOS: "15.0"
+targets:
+  FeatherMarkdown:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Resources/web
+        buildPhase: resources
+        type: folder
+    info:
+      path: Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.haoqiwan.feathermarkdown
+        PRODUCT_NAME: Feather Markdown
+        PRODUCT_MODULE_NAME: FeatherMarkdown
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        CURRENT_PROJECT_VERSION: 3
+        MARKETING_VERSION: 0.3.0
+schemes:
+  FeatherMarkdown:
+    build:
+      targets:
+        FeatherMarkdown: all
+    run:
+      config: Debug
+    archive:
+      config: Release
