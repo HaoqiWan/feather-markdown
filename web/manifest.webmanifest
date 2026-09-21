@@ -1,0 +1,17 @@
+{
+  "name": "Feather Markdown",
+  "short_name": "Feather",
+  "description": "A lightweight Markdown reader and editor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f4ef",
+  "theme_color": "#f6f4ef",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
