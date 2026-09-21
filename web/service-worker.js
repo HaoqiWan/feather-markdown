@@ -1,5 +1,5 @@
-const CACHE = 'feather-markdown-v6';
-const SHELL = ['/', '/app.css', '/app.js', '/manifest.webmanifest', '/icon.svg'];
+const CACHE = 'feather-markdown-v7';
+const SHELL = ['/', '/app.css', '/app.js', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));

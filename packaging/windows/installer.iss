@@ -25,7 +25,8 @@ WizardStyle=modern
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-UninstallDisplayIcon={app}\FeatherMarkdown.exe
+SetupIconFile=FeatherMarkdown.ico
+UninstallDisplayIcon={app}\FeatherMarkdown.ico
 CloseApplications=yes
 SetupLogging=yes
 
@@ -34,10 +35,11 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "{#SourceExe}"; DestDir: "{app}"; DestName: "FeatherMarkdown.exe"; Flags: ignoreversion
+Source: "FeatherMarkdown.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\Feather Markdown"; Filename: "{app}\FeatherMarkdown.exe"
-Name: "{autodesktop}\Feather Markdown"; Filename: "{app}\FeatherMarkdown.exe"; Tasks: desktopicon
+Name: "{autoprograms}\Feather Markdown"; Filename: "{app}\FeatherMarkdown.exe"; IconFilename: "{app}\FeatherMarkdown.ico"
+Name: "{autodesktop}\Feather Markdown"; Filename: "{app}\FeatherMarkdown.exe"; IconFilename: "{app}\FeatherMarkdown.ico"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加图标："; Flags: unchecked

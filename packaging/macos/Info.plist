@@ -8,6 +8,8 @@
   <string>Feather Markdown</string>
   <key>CFBundleExecutable</key>
   <string>FeatherMarkdown</string>
+  <key>CFBundleIconFile</key>
+  <string>FeatherMarkdown.icns</string>
   <key>CFBundleIdentifier</key>
   <string>com.wanghaoqi.feathermarkdown</string>
   <key>CFBundleInfoDictionaryVersion</key>

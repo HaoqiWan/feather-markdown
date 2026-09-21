@@ -66,7 +66,8 @@ jobs:
         run: |
           set -euo pipefail
           version="${RELEASE_VERSION#v}"
-          mkdir -p "build/macos/Feather Markdown.app/Contents/MacOS" release-assets build/dmg
+          mkdir -p "build/macos/Feather Markdown.app/Contents/MacOS" \
+            "build/macos/Feather Markdown.app/Contents/Resources" release-assets build/dmg
           for arch in amd64 arm64; do
             CGO_ENABLED=0 GOOS=darwin GOARCH="$arch" go build -trimpath -buildvcs=false \
               -ldflags="-s -w -buildid= -X main.version=$version" -o "build/FeatherMarkdown-$arch" .
@@ -74,6 +75,7 @@ jobs:
           lipo -create build/FeatherMarkdown-amd64 build/FeatherMarkdown-arm64 \
             -output "build/macos/Feather Markdown.app/Contents/MacOS/FeatherMarkdown"
           cp packaging/macos/Info.plist "build/macos/Feather Markdown.app/Contents/Info.plist"
+          cp packaging/macos/FeatherMarkdown.icns "build/macos/Feather Markdown.app/Contents/Resources/FeatherMarkdown.icns"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $version" "build/macos/Feather Markdown.app/Contents/Info.plist"
           codesign --force --deep --sign - "build/macos/Feather Markdown.app"
           ditto -c -k --sequesterRsrc --keepParent "build/macos/Feather Markdown.app" \

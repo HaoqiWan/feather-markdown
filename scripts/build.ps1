@@ -26,8 +26,11 @@ try {
     if ($target.OS -eq "darwin") {
       $appBundle = Join-Path $dist ("Feather Markdown-{0}.app" -f $target.Arch)
       $macOSDirectory = Join-Path $appBundle "Contents\MacOS"
+      $resourcesDirectory = Join-Path $appBundle "Contents\Resources"
       New-Item -ItemType Directory -Force -Path $macOSDirectory | Out-Null
+      New-Item -ItemType Directory -Force -Path $resourcesDirectory | Out-Null
       Copy-Item -Force (Join-Path $projectRoot "packaging\macos\Info.plist") (Join-Path $appBundle "Contents\Info.plist")
+      Copy-Item -Force (Join-Path $projectRoot "packaging\macos\FeatherMarkdown.icns") (Join-Path $resourcesDirectory "FeatherMarkdown.icns")
       $output = Join-Path $macOSDirectory "FeatherMarkdown"
     }
     else {

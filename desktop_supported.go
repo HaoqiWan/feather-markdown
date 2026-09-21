@@ -17,6 +17,7 @@ func runDesktop(url string, debug bool) error {
 	defer window.Destroy()
 
 	window.SetTitle("Feather Markdown")
+	setWindowIcon(window.Window())
 	window.SetSize(1180, 780, webview.HintNone)
 	window.SetSize(860, 560, webview.HintMin)
 	window.Navigate(url)

@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Feather Markdown — M 与向下箭头</title>
   <rect width="512" height="512" rx="112" fill="#2f6f5e"/>
-  <path d="M122 136h268v240H122z" fill="#f7f3e8"/>
-  <path d="M166 199h180v28H166zm0 66h112v28H166zm0 66h148v28H166z" fill="#2f6f5e"/>
-  <path d="m326 250 48-48 18 18-48 48-32 12z" fill="#d69e5a"/>
+  <path d="M118 364V148L256 278 378 148" fill="none" stroke="#f7f3e8" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M378 148V336M322 298l56 62 56-62" fill="none" stroke="#e1a85f" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

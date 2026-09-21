@@ -15,8 +15,9 @@ for TARGET in windows/amd64 windows/arm64 darwin/amd64 darwin/arm64 linux/amd64 
   [ "$GOOS" = "windows" ] && EXT=".exe"
   if [ "$GOOS" = "darwin" ]; then
     APP="$DIST/Feather Markdown-$GOARCH.app"
-    mkdir -p "$APP/Contents/MacOS"
+    mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
     cp "$PROJECT_ROOT/packaging/macos/Info.plist" "$APP/Contents/Info.plist"
+    cp "$PROJECT_ROOT/packaging/macos/FeatherMarkdown.icns" "$APP/Contents/Resources/FeatherMarkdown.icns"
     OUTPUT="$APP/Contents/MacOS/FeatherMarkdown"
     LABEL="Feather Markdown-$GOARCH.app"
   else
