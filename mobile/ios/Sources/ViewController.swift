@@ -17,7 +17,7 @@ final class ViewController: UIViewController, WKScriptMessageHandler, UIDocument
 
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.isOpaque = false
-        webView.backgroundColor = UIColor(red: 246 / 255, green: 244 / 255, blue: 239 / 255, alpha: 1)
+        webView.backgroundColor = UIColor(red: 243 / 255, green: 248 / 255, blue: 252 / 255, alpha: 1)
         view = webView
     }
 

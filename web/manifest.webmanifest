@@ -4,8 +4,8 @@
   "description": "A lightweight Markdown reader and editor",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f6f4ef",
-  "theme_color": "#f6f4ef",
+  "background_color": "#f3f8fc",
+  "theme_color": "#f3f8fc",
   "icons": [
     {
       "src": "./icon.svg",

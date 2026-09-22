@@ -594,7 +594,7 @@ func main() {
     else document.documentElement.dataset.theme = theme;
     localStorage.setItem('feather.theme', theme);
     elements.themeButton.title = `主题：${theme === 'system' ? '跟随系统' : theme === 'dark' ? '深色' : '浅色'}`;
-    document.querySelector('meta[name="theme-color"]').content = resolvedTheme() === 'dark' ? '#171a18' : '#f6f4ef';
+    document.querySelector('meta[name="theme-color"]').content = resolvedTheme() === 'dark' ? '#111b25' : '#f3f8fc';
   }
 
   function cycleTheme() {
