@@ -36,6 +36,8 @@ Also included: Chinese/English switching, multiple reading styles, customizable 
 
 > Workspaces are a desktop feature. Android and iOS keep the lighter single-document workflow and do not show workspace controls.
 
+The repository also includes a standalone WeChat Mini Program. It opens in preview mode, replaces the preview with the editor when requested, and returns to the rendered document when editing is complete. See [`wechat-miniprogram/`](wechat-miniprogram/).
+
 ## Downloads
 
 Each release contains exactly ten assets—portable archives or installers for desktop and mobile platforms.
@@ -150,6 +152,7 @@ Important paths:
 | `web/` | Viewer, editor, themes, outline, math, Mermaid, and PWA assets |
 | `mobile/android/` | Native Android application |
 | `mobile/ios/` | Native iOS/iPadOS application |
+| `wechat-miniprogram/` | Single-document WeChat Mini Program |
 | `packaging/` | Windows installer and macOS bundle assets |
 | `scripts/` | Reproducible builds, icon generation, and size checks |
 

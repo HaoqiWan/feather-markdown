@@ -19,6 +19,8 @@ jobs:
           cache: false
       - name: Test
         run: go test ./...
+      - name: Validate WeChat mini program
+        run: node scripts/check-miniprogram.js
       - name: Build all platforms and enforce 10 MiB limit
         run: sh scripts/build.sh "${GITHUB_REF_NAME:-dev}"
       - uses: actions/upload-artifact@v5

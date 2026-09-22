@@ -36,6 +36,8 @@ Feather Markdown 从一个明确的约束出发：**每个 Release 文件必须�
 
 > 桌面版提供工作区；Android 和 iOS 保持轻量的单文件模式，不显示工作区入口。
 
+仓库同时提供独立的微信小程序版源码：默认展示预览，点击编辑后同一区域切换为编辑器，完成后返回预览。详见 [`wechat-miniprogram/`](wechat-miniprogram/)。
+
 ## 下载
 
 每个版本固定包含十个文件——桌面与移动平台分别提供便携包或安装包。
@@ -150,6 +152,7 @@ Go 主程序
 | `web/` | 阅读器、编辑器、主题、大纲、公式、Mermaid 与 PWA 资源 |
 | `mobile/android/` | Android 原生应用 |
 | `mobile/ios/` | iOS / iPadOS 原生应用 |
+| `wechat-miniprogram/` | 微信小程序单文件阅读与编辑应用 |
 | `packaging/` | Windows 安装器与 macOS App 资源 |
 | `scripts/` | 可复现构建、图标生成和体积检查 |
 

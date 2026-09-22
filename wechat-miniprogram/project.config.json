@@ -1,0 +1,16 @@
+{
+  "appid": "touristappid",
+  "projectname": "feather-markdown-wechat",
+  "description": "Feather Markdown 微信小程序",
+  "miniprogramRoot": "./",
+  "compileType": "miniprogram",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": true,
+    "coverView": true,
+    "lazyloadPlaceholderEnable": true
+  }
+}

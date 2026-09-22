@@ -1,0 +1,68 @@
+<view class="page theme-{{theme}}">
+  <view class="topbar">
+    <view class="brand">
+      <image class="brand-mark" src="/assets/logo.svg" mode="aspectFit"></image>
+      <view class="brand-copy">
+        <text class="brand-name">Feather</text>
+        <text class="brand-subtitle">Markdown</text>
+      </view>
+    </view>
+    <view class="top-actions">
+      <button class="icon-button" bindtap="toggleTheme" aria-label="切换主题">{{theme === 'dark' ? '☀' : '◐'}}</button>
+      <button wx:if="{{!editing}}" class="primary-action" bindtap="enterEdit">编辑</button>
+      <button wx:else class="primary-action" bindtap="finishEdit">完成</button>
+    </view>
+  </view>
+
+  <view class="document-bar">
+    <view class="document-copy">
+      <text class="document-title">{{title}}</text>
+      <text class="document-meta">{{fileName}} · {{statsText}}{{dirty ? ' · 未保存' : ''}}</text>
+    </view>
+    <view class="document-actions" wx:if="{{!editing}}">
+      <button class="quiet-button" bindtap="newDocument">新建</button>
+      <button class="quiet-button" bindtap="importDocument">导入</button>
+      <button class="quiet-button" bindtap="exportDocument">导出</button>
+    </view>
+  </view>
+
+  <scroll-view wx:if="{{!editing}}" class="preview-scroll" scroll-y enable-back-to-top>
+    <view class="preview-card">
+      <rich-text wx:if="{{renderedHTML}}" class="markdown-body" nodes="{{renderedHTML}}"></rich-text>
+      <view wx:else class="empty-state">
+        <text class="empty-title">这是一张空白羽毛纸</text>
+        <text class="empty-copy">点击“编辑”开始写作</text>
+      </view>
+    </view>
+    <view class="preview-footer">
+      <button class="footer-button" bindtap="copyMarkdown">复制 Markdown</button>
+      <text>草稿仅保存在当前设备</text>
+    </view>
+  </scroll-view>
+
+  <view wx:else class="editor-view">
+    <scroll-view class="format-strip" scroll-x enable-flex show-scrollbar="{{false}}">
+      <button class="format-button" bindtap="cancelEdit">取消</button>
+      <view class="format-divider"></view>
+      <button wx:for="{{toolbar}}" wx:key="action" class="format-button format-command" data-action="{{item.action}}" bindtap="insertFormatting">{{item.label}}</button>
+    </scroll-view>
+    <textarea
+      class="markdown-editor"
+      value="{{markdown}}"
+      maxlength="-1"
+      cursor="{{editorCursor}}"
+      focus="{{editorFocus}}"
+      show-confirm-bar="{{false}}"
+      adjust-position="{{true}}"
+      placeholder="输入 Markdown…"
+      bindinput="onEditorInput"
+      bindblur="onEditorBlur"
+    ></textarea>
+    <view class="editor-footer">
+      <text>{{statsText}}</text>
+      <text>完成后返回预览</text>
+    </view>
+  </view>
+
+  <view wx:if="{{toast}}" class="toast">{{toast}}</view>
+</view>

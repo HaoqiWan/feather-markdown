@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "Feather Markdown",
+    "navigationBarBackgroundColor": "#105c3b",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f3f6f2",
+    "backgroundTextStyle": "dark"
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}
