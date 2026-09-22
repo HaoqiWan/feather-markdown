@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f3f8fc">
   <meta name="description" content="轻量、实时的 Markdown 阅读与编辑器">
   <title>Feather Markdown</title>
-  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="icon" href="./icon-192.png" type="image/png">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.7/dist/katex.min.css">
   <link rel="stylesheet" href="./app.css">
@@ -15,92 +15,153 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.18.7/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.18.7/dist/contrib/auto-render.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/mermaid@12.0.0/dist/mermaid.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script defer src="./preferences.js"></script>
   <script defer src="./app.js"></script>
 </head>
 <body data-mobile-pane="preview">
   <header class="topbar">
     <div class="brand" aria-label="Feather Markdown">
-      <span class="brand-mark" aria-hidden="true"><img src="./icon.svg" alt=""></span>
+      <span class="brand-mark" aria-hidden="true"><img src="./icon-192.png" alt=""></span>
       <span class="brand-name">Feather</span>
     </div>
     <div class="document-title">
       <span id="document-name">未命名.md</span>
       <span id="save-state" class="save-state">已保存</span>
     </div>
-    <nav class="actions" aria-label="文档操作">
+    <nav class="actions" aria-label="文档操作" data-i18n-aria="documentActions">
       <div class="action-group file-actions">
-        <button id="new-button" class="button text-action" type="button" title="新建 (Ctrl+N)">新建</button>
-        <button id="open-button" class="button text-action" type="button" title="打开 (Ctrl+O)">打开</button>
-        <button id="save-button" class="button primary" type="button" title="保存 (Ctrl+S)">保存</button>
+        <button id="new-button" class="button text-action file-action" type="button" title="新建 (Ctrl+N)">
+          <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="button-label" data-i18n="newFile">新建</span>
+        </button>
+        <button id="open-button" class="button text-action file-action" type="button" title="打开 (Ctrl+O)">
+          <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 18.5 6 9h14.5l-2.5 9.5H3.5Z"/><path d="M5 9V5.5h5l2 2h6V9"/></svg>
+          <span class="button-label" data-i18n="open">打开</span>
+        </button>
+        <button id="workspace-button" class="button text-action file-action" type="button" title="工作区" data-i18n-title="workspace">
+          <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 18.5 6 9h14.5l-2.5 9.5H3.5Z"/><path d="M5 9V5.5h5l2 2h6V9"/><path d="M12 12v5m-2.5-2.5h5"/></svg>
+          <span class="button-label" data-i18n="workspace">工作区</span>
+        </button>
+        <button id="save-button" class="button text-action file-action save-action" type="button" title="保存 (Ctrl+S)" data-save-visual-state="saved">
+          <svg class="action-icon save-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12l2 2v14H5V4Z"/><path d="M8 4v6h8V4M8 20v-6h8v6"/></svg>
+          <span id="save-button-label" class="button-label" data-i18n="save">保存</span>
+        </button>
+        <div class="export-menu-wrap">
+          <button id="export-button" class="button text-action file-action" type="button" title="打印与导出" aria-haspopup="menu" aria-expanded="false">
+            <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+            <span class="button-label" data-i18n="export">导出</span>
+          </button>
+          <div id="export-menu" class="export-menu" role="menu" hidden>
+            <button type="button" role="menuitem" data-export-action="portable"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z"/><path d="M14 3v5h5M8 13h8M8 17h6"/></svg><span><strong data-i18n="portableMarkdown">可移植 Markdown</strong><small data-i18n="portableMarkdownDesc">文档与图片资源文件夹</small></span></button>
+            <button type="button" role="menuitem" data-export-action="print"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M7 14h10v7H7Z"/></svg><span><strong data-i18n="print">打印</strong><small data-i18n="printDesc">使用系统打印设置</small></span></button>
+            <button type="button" role="menuitem" data-export-action="pdf"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l4 4v16H6Z"/><path d="M14 2v5h5M9 16h6M9 12h6"/></svg><span><strong data-i18n="exportPdf">导出 PDF</strong><small data-i18n="exportPdfDesc">生成分页 PDF 文件</small></span></button>
+            <button type="button" role="menuitem" data-export-action="image"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m5 18 4.5-5 3.5 3 2.5-3 3.5 5"/></svg><span><strong data-i18n="exportLongImage">导出长图</strong><small data-i18n="exportLongImageDesc">完整预览 PNG 图片</small></span></button>
+          </div>
+        </div>
       </div>
       <span class="action-divider" aria-hidden="true"></span>
       <div class="action-group view-actions">
         <button id="editor-toggle-button" class="button editor-toggle" type="button" title="显示编辑器 (Ctrl+Shift+E)" aria-label="显示或隐藏编辑器" aria-pressed="false">
           <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>
-          <span class="button-label">编辑器</span>
+          <span class="button-label" data-i18n="editor">编辑器</span>
         </button>
-        <button id="outline-button" class="icon-button" type="button" title="切换大纲" aria-label="切换大纲">
-          <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/></svg>
+        <button id="fullscreen-button" class="icon-button" type="button" title="进入全屏 (F11)" aria-label="进入全屏" aria-pressed="false">
+          <svg class="action-icon fullscreen-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
         </button>
         <button id="theme-button" class="icon-button" type="button" title="切换主题" aria-label="切换主题">
           <svg class="action-icon theme-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path class="theme-fill" d="M12 3.5a8.5 8.5 0 0 0 0 17Z"/></svg>
         </button>
+        <button id="settings-button" class="icon-button" type="button" title="设置 (Ctrl+,)" aria-label="设置" data-i18n-title="settings" data-i18n-aria="settings">
+          <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.08A1.7 1.7 0 0 0 8.94 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15 1.7 1.7 0 0 0 3.08 14H3v-4h.08A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88L4.2 7l2.83-2.83.06.06A1.7 1.7 0 0 0 8.97 4.6 1.7 1.7 0 0 0 10 3.08V3h4v.08A1.7 1.7 0 0 0 15.06 4.6a1.7 1.7 0 0 0 1.88-.34L17 4.2 19.83 7l-.06.06a1.7 1.7 0 0 0-.34 1.88A1.7 1.7 0 0 0 20.92 10H21v4h-.08A1.7 1.7 0 0 0 19.4 15Z"/></svg>
+        </button>
       </div>
     </nav>
+    <div class="window-controls" aria-label="窗口操作">
+      <button type="button" data-window-action="minimize" title="最小化" aria-label="最小化"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8.5h12"/></svg></button>
+      <button id="window-maximize-button" type="button" data-window-action="maximize" data-maximized="false" title="最大化" aria-label="最大化" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><rect class="window-maximize-icon" x="2.25" y="2.25" width="11.5" height="11.5" rx=".8"/><path class="window-restore-icon" d="M5 2.75h8.25V11H11M2.75 5H11v8.25H2.75Z"/></svg></button>
+      <button class="window-close" type="button" data-window-action="close" title="关闭" aria-label="关闭"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m2.5 2.5 11 11m0-11-11 11"/></svg></button>
+    </div>
   </header>
 
   <div class="mobile-tabs editor-hidden" role="tablist" aria-label="移动端视图">
-    <button class="mobile-tab hidden" data-pane="editor" role="tab" aria-selected="false">编辑</button>
-    <button class="mobile-tab active" data-pane="preview" role="tab" aria-selected="true">预览</button>
-    <button class="mobile-tab" data-pane="outline" role="tab" aria-selected="false">大纲</button>
+    <button class="mobile-tab hidden" data-pane="editor" role="tab" aria-selected="false" data-i18n="edit">编辑</button>
+    <button class="mobile-tab active" data-pane="preview" role="tab" aria-selected="true" data-i18n="preview">预览</button>
+    <button class="mobile-tab" data-pane="outline" role="tab" aria-selected="false" data-i18n="outline">大纲</button>
   </div>
 
   <main class="workspace editor-collapsed">
-    <aside id="outline-panel" class="outline-panel" aria-label="文档大纲">
-      <div class="panel-heading">
-        <span>文档大纲</span>
-        <span id="heading-count" class="count-badge">0</span>
+    <aside id="outline-panel" class="outline-panel" aria-label="笔记与文档大纲">
+      <div class="sidebar-tabs" role="tablist">
+        <button class="sidebar-tab active" type="button" role="tab" data-sidebar-view="workspace" aria-selected="true" data-i18n="notes">笔记</button>
+        <button class="sidebar-tab" type="button" role="tab" data-sidebar-view="outline" aria-selected="false" data-i18n="outline">大纲</button>
       </div>
-      <nav id="outline" class="outline"></nav>
-      <p id="outline-empty" class="empty-hint">添加标题后会自动生成大纲</p>
+      <section id="workspace-browser" class="sidebar-view active" data-sidebar-panel="workspace">
+        <div class="panel-heading workspace-heading">
+          <span id="workspace-name" data-i18n="noWorkspace">未选择工作区</span>
+          <span id="workspace-note-count" class="count-badge">0</span>
+        </div>
+        <div id="workspace-tools" class="workspace-tools" hidden>
+          <button type="button" data-workspace-create="note" title="新建笔记" data-i18n-title="newNote"><span aria-hidden="true">＋</span><span data-i18n="newNote">笔记</span></button>
+          <button type="button" data-workspace-create="folder" title="新建分类" data-i18n-title="newCategory"><span aria-hidden="true">⌑</span><span data-i18n="newCategory">分类</span></button>
+          <button id="workspace-refresh" type="button" title="刷新工作区" aria-label="刷新工作区" data-i18n-title="refreshWorkspace" data-i18n-aria="refreshWorkspace"><span aria-hidden="true">↻</span></button>
+        </div>
+        <button id="workspace-empty" class="workspace-empty" type="button"><strong data-i18n="chooseWorkspace">选择本机文件夹</strong><span data-i18n="workspaceEmptyDesc">子文件夹将作为笔记分类</span></button>
+        <nav id="workspace-tree" class="workspace-tree" aria-label="笔记文件"></nav>
+      </section>
+      <section class="sidebar-view" data-sidebar-panel="outline" hidden>
+        <div class="panel-heading">
+          <span data-i18n="documentOutline">文档大纲</span>
+          <span id="heading-count" class="count-badge">0</span>
+        </div>
+        <nav id="outline" class="outline"></nav>
+        <p id="outline-empty" class="empty-hint" data-i18n="outlineEmpty">添加标题后会自动生成大纲</p>
+      </section>
     </aside>
 
-    <div id="outline-resizer" class="panel-resizer outline-resizer" role="separator" aria-label="调整文档大纲宽度" aria-orientation="vertical" aria-valuemin="150" aria-valuenow="220" tabindex="0"></div>
+    <div id="outline-resizer" class="panel-resizer outline-resizer" role="separator" aria-label="调整文档大纲宽度" aria-orientation="vertical" aria-valuemin="150" aria-valuenow="220" tabindex="0">
+      <button id="outline-toggle-button" class="outline-toggle" type="button" title="收起大纲" aria-label="收起大纲" aria-controls="outline-panel" aria-expanded="true">
+        <span class="grip-lines" aria-hidden="true"><i></i><i></i></span>
+      </button>
+    </div>
 
     <section id="editor-panel" class="editor-panel hidden" aria-label="Markdown 编辑器">
       <div class="format-bar" aria-label="格式工具栏">
         <span class="format-group">
-          <button type="button" data-command="undo" title="撤销 (Ctrl+Z)">↶</button>
-          <button type="button" data-command="redo" title="重做 (Ctrl+Y)">↷</button>
+          <button type="button" data-command="undo" title="撤销 (Ctrl+Z)" aria-label="撤销" data-i18n-aria="undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 7-5 5 5 5M4 12h9a6 6 0 0 1 6 6"/></svg></button>
+          <button type="button" data-command="redo" title="重做 (Ctrl+Y)" aria-label="重做" data-i18n-aria="redo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 7 5 5-5 5M20 12h-9a6 6 0 0 0-6 6"/></svg></button>
         </span>
         <span class="format-group">
-          <button type="button" data-format="heading1" title="一级标题">H1</button>
-          <button type="button" data-format="heading2" title="二级标题">H2</button>
-          <button type="button" data-format="heading3" title="三级标题">H3</button>
+          <button type="button" data-format="heading1" title="一级标题" data-i18n-title="heading1">H1</button>
+          <button type="button" data-format="heading2" title="二级标题" data-i18n-title="heading2">H2</button>
+          <button type="button" data-format="heading3" title="三级标题" data-i18n-title="heading3">H3</button>
         </span>
         <span class="format-group">
-          <button type="button" data-format="bold" title="粗体"><strong>B</strong></button>
-          <button type="button" data-format="italic" title="斜体"><em>I</em></button>
-          <button type="button" data-format="strike" title="删除线"><s>S</s></button>
-          <button type="button" data-format="code" title="行内代码">`</button>
+          <button type="button" data-format="bold" title="粗体" data-i18n-title="bold"><strong>B</strong></button>
+          <button type="button" data-format="italic" title="斜体" data-i18n-title="italic"><em>I</em></button>
+          <button type="button" data-format="strike" title="删除线" data-i18n-title="strikethrough"><s>S</s></button>
+          <button type="button" data-format="code" title="行内代码" data-i18n-title="inlineCode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 8-4 4 4 4M15 8l4 4-4 4"/></svg></button>
         </span>
         <span class="format-group">
-          <button type="button" data-format="link" title="链接">⌁</button>
-          <button type="button" data-format="image" title="图片">▧</button>
-          <button type="button" data-format="quote" title="引用">❯</button>
-          <button type="button" data-format="unorderedList" title="无序列表">•≡</button>
-          <button type="button" data-format="orderedList" title="有序列表">1≡</button>
-          <button type="button" data-format="taskList" title="任务列表">☑</button>
+          <button type="button" data-format="link" title="插入链接" data-i18n-title="insertLink"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.2M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.2"/></svg></button>
+          <button id="image-button" type="button" title="插入图片" aria-label="插入图片" data-i18n-title="insertImage" data-i18n-aria="insertImage"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m5 18 4.5-5 3.5 3 2.5-3 3.5 5"/></svg></button>
+          <button type="button" data-format="quote" title="引用" data-i18n-title="quote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h5v5H7a4 4 0 0 1-4 4M15 7h5v5h-4a4 4 0 0 1-4 4"/></svg></button>
+          <button type="button" data-format="unorderedList" title="无序列表" data-i18n-title="unorderedList"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="7" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="17" r="1"/><path d="M9 7h10M9 12h10M9 17h10"/></svg></button>
+          <button type="button" data-format="orderedList" title="有序列表" data-i18n-title="orderedList"><span class="ordered-list-icon">1.</span></button>
+          <button type="button" data-format="taskList" title="任务列表" data-i18n-title="taskList"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="7" height="7" rx="1"/><path d="m5 7 1.5 1.5L9 6M13 7h8M3 17h7M13 17h8"/></svg></button>
         </span>
         <span class="format-group">
-          <button type="button" data-format="codeblock" title="代码块">{ }</button>
-          <button type="button" data-format="table" title="表格">▦</button>
-          <button type="button" data-format="horizontalRule" title="分隔线">—</button>
-          <button type="button" data-format="math" title="数学公式">∑</button>
-          <button type="button" data-format="mermaid" title="Mermaid 图">◇</button>
+          <button type="button" data-format="codeblock" title="代码块" data-i18n-title="codeBlock"><span class="code-block-icon">&lt;/&gt;</span></button>
+          <button type="button" data-format="table" title="表格" data-i18n-title="table"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 10h18M9 4v16M15 4v16"/></svg></button>
+          <button type="button" data-format="horizontalRule" title="分隔线" data-i18n-title="horizontalRule"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16"/></svg></button>
+          <button type="button" data-format="math" title="数学公式" data-i18n-title="math"><span class="math-icon">∑</span></button>
+          <button id="mermaid-button" class="mermaid-tool" type="button" data-format="mermaid" title="选择 Mermaid 图表模板" data-i18n-title="insertDiagram"><svg class="diagram-tool-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="6" height="5" rx="1"/><rect x="15" y="15" width="6" height="5" rx="1"/><path d="M9 6.5h4a4 4 0 0 1 4 4V15M12 11l-3 3m3-3 3 3"/></svg><span class="mermaid-tool-label" data-i18n="diagramTemplatesShort">图表</span><svg class="toolbar-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg></button>
         </span>
       </div>
       <textarea id="editor" spellcheck="false" aria-label="Markdown 内容"></textarea>
+      <div id="editor-drop-overlay" class="editor-drop-overlay" aria-hidden="true" data-i18n="dropImagesHere">松开以插入图片</div>
       <div class="statusbar">
         <span id="cursor-position">第 1 行，第 1 列</span>
         <span id="document-stats">0 字 · 0 行</span>
@@ -110,13 +171,138 @@
     <div id="editor-resizer" class="panel-resizer editor-resizer" role="separator" aria-label="调整编辑器与预览宽度" aria-orientation="vertical" aria-valuemin="220" aria-valuenow="420" tabindex="0"></div>
 
     <section id="preview-panel" class="preview-panel" aria-label="实时预览">
-      <div class="preview-label">实时预览</div>
+      <div class="preview-label" data-i18n="livePreview">实时预览</div>
       <article id="preview" class="markdown-body"></article>
     </section>
   </main>
 
   <input id="file-input" type="file" accept=".md,.markdown,.mdown,.mkd,text/markdown,text/plain" hidden>
+  <input id="image-input" type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" multiple hidden>
+  <div id="app-dialog" class="app-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-message" hidden>
+    <div class="dialog-backdrop" data-dialog-value="cancel"></div>
+    <section class="dialog-card" tabindex="-1">
+      <div class="dialog-mark" aria-hidden="true"><img src="./icon-192.png" alt=""></div>
+      <div class="dialog-copy">
+        <h2 id="dialog-title"></h2>
+        <p id="dialog-message"></p>
+      </div>
+      <div id="dialog-actions" class="dialog-actions"></div>
+    </section>
+  </div>
+
+  <dialog id="settings-dialog" class="feature-dialog settings-dialog" aria-labelledby="settings-title">
+    <div class="feature-dialog-shell settings-shell">
+      <header class="feature-dialog-header">
+        <div><span class="dialog-eyebrow" data-i18n="personalize">个性化</span><h2 id="settings-title" data-i18n="settings">设置</h2></div>
+        <button class="feature-dialog-close" type="button" data-close-feature-dialog aria-label="关闭" data-i18n-aria="close">×</button>
+      </header>
+      <div class="settings-layout">
+        <nav class="settings-nav" aria-label="设置分类" data-i18n-aria="settingsCategories">
+          <button class="settings-tab active" type="button" data-settings-tab="general"><span>◎</span><span data-i18n="general">通用</span></button>
+          <button class="settings-tab" type="button" data-settings-tab="appearance"><span>◐</span><span data-i18n="appearance">外观</span></button>
+          <button class="settings-tab" type="button" data-settings-tab="shortcuts"><span>⌘</span><span data-i18n="keyboard">快捷键</span></button>
+          <p class="settings-nav-note" data-i18n="settingsSaved">设置会自动保存在本机</p>
+        </nav>
+        <div class="settings-content">
+          <section class="settings-page active" data-settings-page="general">
+            <div class="settings-heading"><h3 data-i18n="general">通用</h3><p data-i18n="generalDesc">选择语言和编辑偏好。</p></div>
+            <div class="setting-row setting-row-stack">
+              <div><label data-i18n="language">界面语言</label><p data-i18n="languageDesc">切换后立即生效，不会改变文档内容。</p></div>
+              <div class="segmented-control" role="group" aria-label="界面语言" data-i18n-aria="language">
+                <button type="button" data-language="zh-CN">简体中文</button><button type="button" data-language="en">English</button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div><label for="editor-font-size" data-i18n="editorFontSize">编辑器字号</label><p data-i18n="editorFontSizeDesc">只调整源码编辑区。</p></div>
+              <div class="range-control"><input id="editor-font-size" type="range" min="12" max="20" step="1"><output id="editor-font-size-value">14 px</output></div>
+            </div>
+            <div class="setting-row">
+              <div><label for="sync-scroll-toggle" data-i18n="syncScroll">同步滚动</label><p data-i18n="syncScrollDesc">编辑器滚动时同步预览位置。</p></div>
+              <label class="switch-control"><input id="sync-scroll-toggle" type="checkbox"><span></span></label>
+            </div>
+          </section>
+          <section class="settings-page" data-settings-page="appearance">
+            <div class="settings-heading"><h3 data-i18n="appearance">外观</h3><p data-i18n="appearanceDesc">分别设置应用界面与 Markdown 阅读风格。</p></div>
+            <div class="setting-block">
+              <div class="setting-block-label"><label data-i18n="interfaceTheme">界面主题</label><span data-i18n="interfaceThemeDesc">跟随系统或固定明暗模式</span></div>
+              <div class="theme-mode-grid">
+                <button class="mode-card" type="button" data-theme-choice="system"><span class="mode-preview system-preview"><i></i><i></i></span><strong data-i18n="system">跟随系统</strong></button>
+                <button class="mode-card" type="button" data-theme-choice="light"><span class="mode-preview light-preview"><i></i><i></i></span><strong data-i18n="light">浅色</strong></button>
+                <button class="mode-card" type="button" data-theme-choice="dark"><span class="mode-preview dark-preview"><i></i><i></i></span><strong data-i18n="dark">深色</strong></button>
+              </div>
+            </div>
+            <div class="setting-block">
+              <div class="setting-block-label"><label data-i18n="readingStyle">Markdown 风格</label><span data-i18n="readingStyleDesc">改变预览区的字体、间距和元素样式</span></div>
+              <div class="reading-style-grid">
+                <button class="style-card" type="button" data-reading-style="feather"><span class="style-swatch feather-swatch"><b>Aa</b><i></i><i></i></span><span><strong>Feather</strong><small data-i18n="styleFeather">温润、适合长文</small></span></button>
+                <button class="style-card" type="button" data-reading-style="github"><span class="style-swatch github-swatch"><b>&lt;/&gt;</b><i></i><i></i></span><span><strong>GitHub</strong><small data-i18n="styleGithub">紧凑、代码友好</small></span></button>
+                <button class="style-card" type="button" data-reading-style="academic"><span class="style-swatch academic-swatch"><b>¶</b><i></i><i></i></span><span><strong data-i18n="academic">学术</strong><small data-i18n="styleAcademic">衬线、论文排版</small></span></button>
+                <button class="style-card" type="button" data-reading-style="minimal"><span class="style-swatch minimal-swatch"><b>—</b><i></i><i></i></span><span><strong data-i18n="minimal">极简</strong><small data-i18n="styleMinimal">留白、无边框阅读</small></span></button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div><label data-i18n="accentColor">强调色</label><p data-i18n="accentColorDesc">用于链接、选中状态和光标。</p></div>
+              <div class="color-options" role="group" aria-label="强调色" data-i18n-aria="accentColor">
+                <button type="button" data-accent="fern" style="--swatch:#2f6f5e" aria-label="Fern"></button><button type="button" data-accent="blue" style="--swatch:#3867d6" aria-label="Blue"></button><button type="button" data-accent="violet" style="--swatch:#7557b5" aria-label="Violet"></button><button type="button" data-accent="amber" style="--swatch:#b26a24" aria-label="Amber"></button><button type="button" data-accent="rose" style="--swatch:#ad5362" aria-label="Rose"></button>
+              </div>
+            </div>
+          </section>
+          <section class="settings-page" data-settings-page="shortcuts">
+            <div class="settings-heading shortcut-heading"><div><h3 data-i18n="keyboard">快捷键</h3><p data-i18n="shortcutDesc">点击组合键后直接按下新快捷键。</p></div><button id="reset-shortcuts" class="text-button" type="button" data-i18n="restoreDefaults">恢复默认</button></div>
+            <div id="shortcut-conflict" class="shortcut-conflict" role="alert" hidden></div>
+            <div id="shortcut-list" class="shortcut-list"></div>
+            <p class="shortcut-tip" data-i18n="shortcutTip">按 Esc 取消录入，按 Backspace 清除快捷键。</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="image-dialog" class="feature-dialog image-dialog" aria-labelledby="image-dialog-title">
+    <div class="feature-dialog-shell image-dialog-shell">
+      <header class="feature-dialog-header">
+        <div><span class="dialog-eyebrow" data-i18n="insert">插入</span><h2 id="image-dialog-title" data-i18n="insertImage">插入图片</h2><p data-i18n="imageDialogDesc">选择本地图片并嵌入文档，或使用网络图片地址。</p></div>
+        <button class="feature-dialog-close" type="button" data-close-feature-dialog aria-label="关闭" data-i18n-aria="close">×</button>
+      </header>
+      <div class="image-dialog-content">
+        <button id="image-file-button" class="image-file-drop" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 14v5h14v-5"/></svg>
+          <strong data-i18n="chooseLocalImage">选择本地图片</strong>
+          <span data-i18n="imageEmbedHint">支持 PNG、JPG、GIF、WebP、SVG；图片会嵌入 Markdown</span>
+        </button>
+        <div class="image-dialog-separator"><span data-i18n="orUseImageUrl">或使用网络图片</span></div>
+        <div class="image-url-fields">
+          <label><span data-i18n="imageDescription">图片说明</span><input id="image-alt-input" type="text" placeholder="图片说明" data-i18n-placeholder="imageDescription"></label>
+          <label><span data-i18n="imageUrl">图片地址</span><input id="image-url-input" type="url" inputmode="url" placeholder="https://example.com/image.png"></label>
+        </div>
+      </div>
+      <footer class="feature-dialog-footer"><span data-i18n="imagePasteHint">也可以直接向编辑器粘贴或拖入图片</span><span class="dialog-footer-actions"><button class="button" type="button" data-close-feature-dialog data-i18n="cancel">取消</button><button id="insert-image-url-button" class="button primary" type="button" data-i18n="insert">插入</button></span></footer>
+    </div>
+  </dialog>
+
+  <dialog id="mermaid-dialog" class="feature-dialog mermaid-dialog" aria-labelledby="mermaid-title">
+    <div class="feature-dialog-shell mermaid-shell">
+      <header class="feature-dialog-header">
+        <div><span class="dialog-eyebrow">MERMAID</span><h2 id="mermaid-title" data-i18n="diagramTemplates">选择图表模板</h2><p data-i18n="diagramTemplatesDesc">选择一种图表，将示例代码插入光标位置。</p></div>
+        <button class="feature-dialog-close" type="button" data-close-feature-dialog aria-label="关闭" data-i18n-aria="close">×</button>
+      </header>
+      <div class="template-toolbar"><label class="template-search"><span aria-hidden="true">⌕</span><input id="template-search" type="search" placeholder="搜索模板" data-i18n-placeholder="searchTemplates"></label><span id="template-count" class="template-count"></span></div>
+      <div id="mermaid-templates" class="template-grid"></div>
+      <footer class="feature-dialog-footer"><span data-i18n="templateHint">插入后可直接修改节点与文字，右侧会实时渲染。</span><button class="button" type="button" data-close-feature-dialog data-i18n="cancel">取消</button></footer>
+    </div>
+  </dialog>
+  <dialog id="workspace-item-dialog" class="feature-dialog workspace-item-dialog" aria-labelledby="workspace-item-title">
+    <form id="workspace-item-form" class="feature-dialog-shell workspace-item-shell" method="dialog">
+      <header class="feature-dialog-header">
+        <div><span class="dialog-eyebrow" data-i18n="workspace">工作区</span><h2 id="workspace-item-title">新建笔记</h2><p id="workspace-item-parent"></p></div>
+        <button class="feature-dialog-close" type="button" data-close-feature-dialog aria-label="关闭" data-i18n-aria="close">×</button>
+      </header>
+      <div class="workspace-item-content"><label><span data-i18n="name">名称</span><input id="workspace-item-name" type="text" maxlength="120" autocomplete="off" required></label></div>
+      <footer class="feature-dialog-footer"><span data-i18n="workspaceCreateHint">将在当前选中的分类中创建</span><span class="dialog-footer-actions"><button class="button" type="button" data-close-feature-dialog data-i18n="cancel">取消</button><button id="workspace-item-submit" class="button primary" type="submit" data-i18n="create">创建</button></span></footer>
+    </form>
+  </dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="fullscreen-exit-hint" class="fullscreen-exit-hint" role="status" aria-live="polite" aria-hidden="true" data-i18n="fullscreenHint">按 Esc 退出全屏</div>
   <noscript>Feather Markdown 需要启用 JavaScript。</noscript>
 </body>
 </html>

@@ -2,7 +2,7 @@ import UIKit
 import WebKit
 import UniformTypeIdentifiers
 
-final class ViewController: UIViewController, WKScriptMessageHandler, UIDocumentPickerDelegate {
+final class ViewController: UIViewController, WKScriptMessageHandler, WKNavigationDelegate, UIDocumentPickerDelegate {
     private var webView: WKWebView!
     private var temporaryExportURL: URL?
 
@@ -10,12 +10,14 @@ final class ViewController: UIViewController, WKScriptMessageHandler, UIDocument
         let controller = WKUserContentController()
         controller.add(self, name: "featherOpen")
         controller.add(self, name: "featherSave")
+        controller.add(self, name: "featherExternal")
 
         let configuration = WKWebViewConfiguration()
         configuration.userContentController = controller
         configuration.websiteDataStore = .default()
 
         webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.navigationDelegate = self
         webView.isOpaque = false
         webView.backgroundColor = UIColor(red: 243 / 255, green: 248 / 255, blue: 252 / 255, alpha: 1)
         view = webView
@@ -40,7 +42,39 @@ final class ViewController: UIViewController, WKScriptMessageHandler, UIDocument
            let body = message.body as? [String: Any],
            let content = body["content"] as? String {
             presentSavePicker(name: body["name"] as? String ?? "文档.md", content: content)
+            return
         }
+        if message.name == "featherExternal", let rawURL = message.body as? String {
+            openExternal(rawURL)
+        }
+    }
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        guard navigationAction.navigationType == .linkActivated,
+              let url = navigationAction.request.url else {
+            decisionHandler(.allow)
+            return
+        }
+        if isAllowedExternalURL(url) {
+            UIApplication.shared.open(url)
+        }
+        decisionHandler(.cancel)
+    }
+
+    private func openExternal(_ rawURL: String) {
+        guard let url = URL(string: rawURL), isAllowedExternalURL(url) else {
+            showError("不支持打开此类型的链接")
+            return
+        }
+        UIApplication.shared.open(url, options: [:]) { [weak self] success in
+            if !success { self?.showError("无法使用系统应用打开链接") }
+        }
+    }
+
+    private func isAllowedExternalURL(_ url: URL) -> Bool {
+        guard let scheme = url.scheme?.lowercased() else { return false }
+        return scheme == "http" || scheme == "https" || scheme == "mailto"
     }
 
     private func presentOpenPicker() {
@@ -64,13 +98,18 @@ final class ViewController: UIViewController, WKScriptMessageHandler, UIDocument
             picker.delegate = self
             present(picker, animated: true)
         } catch {
+            notifySaveComplete(false)
             showError("保存失败：\(error.localizedDescription)")
         }
     }
 
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-        defer { cleanupTemporaryExport() }
-        guard temporaryExportURL == nil, let url = urls.first else { return }
+        if temporaryExportURL != nil {
+            cleanupTemporaryExport()
+            notifySaveComplete(true)
+            return
+        }
+        guard let url = urls.first else { return }
 
         let accessed = url.startAccessingSecurityScopedResource()
         defer { if accessed { url.stopAccessingSecurityScopedResource() } }
@@ -88,7 +127,13 @@ final class ViewController: UIViewController, WKScriptMessageHandler, UIDocument
     }
 
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        let wasSaving = temporaryExportURL != nil
         cleanupTemporaryExport()
+        if wasSaving { notifySaveComplete(false) }
+    }
+
+    private func notifySaveComplete(_ success: Bool) {
+        webView.evaluateJavaScript("window.featherSaveComplete(\(success ? "true" : "false"))")
     }
 
     private func cleanupTemporaryExport() {
@@ -118,5 +163,6 @@ final class ViewController: UIViewController, WKScriptMessageHandler, UIDocument
     deinit {
         webView?.configuration.userContentController.removeScriptMessageHandler(forName: "featherOpen")
         webView?.configuration.userContentController.removeScriptMessageHandler(forName: "featherSave")
+        webView?.configuration.userContentController.removeScriptMessageHandler(forName: "featherExternal")
     }
 }

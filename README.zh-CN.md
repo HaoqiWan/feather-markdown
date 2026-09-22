@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="web/icon.svg" width="112" height="112" alt="Feather Markdown Logo">
+  <img src="web/icon-512.png" width="112" height="112" alt="Feather Markdown Logo">
   <h1>Feather Markdown</h1>
   <p><strong>轻量、阅读优先，需要时才出现编辑器的 Markdown 应用。</strong></p>
   <p>原生窗口 · 实时预览 · 文档大纲 · LaTeX · Mermaid</p>
@@ -8,7 +8,7 @@
     <a href="https://github.com/HaoqiWan/feather-markdown/releases/latest"><img src="https://img.shields.io/github/v/release/HaoqiWan/feather-markdown?style=flat-square&color=2f6f5e" alt="最新版本"></a>
     <a href="https://github.com/HaoqiWan/feather-markdown/actions/workflows/release.yml"><img src="https://github.com/HaoqiWan/feather-markdown/actions/workflows/release.yml/badge.svg" alt="发布构建"></a>
     <img src="https://img.shields.io/badge/size-%3C%2010%20MiB-e1a85f?style=flat-square" alt="安装包小于 10 MiB">
-    <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Android%20%7C%20iOS-59615d?style=flat-square" alt="支持的平台">
+    <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Android%20%7C%20iOS-59615d?style=flat-square" alt="支持的平台">
   </p>
   <p>
     <a href="https://github.com/HaoqiWan/feather-markdown/releases/latest"><strong>下载最新版本</strong></a>
@@ -29,19 +29,23 @@ Feather Markdown 从一个明确的约束出发：**每个 Release 文件必须�
 | **丰富语法** | 支持 GFM 表格、任务列表、KaTeX 数学公式、LaTeX 分隔符和 Mermaid 图。 |
 | **自适应布局** | 桌面端分隔线可拖动，格式工具栏自动换行，宽表格独立横向滚动。 |
 | **真正的应用程序** | Windows 使用 WebView2，Apple 平台使用 WKWebView，Android 使用系统 WebView。 |
-| **本地文件工作流** | 全平台支持打开与保存；桌面端 `-file` 模式还会感知文件的外部变化。 |
+| **本地文件工作流** | 全平台支持打开与保存；桌面端还支持将本机文件夹作为分层笔记工作区。 |
+| **完整导出** | 支持便携 Markdown、打印、PDF 与长图导出，本地图片使用标准相对路径。 |
 
-此外还包含浅色/深色/跟随系统主题、自动文档大纲、完整格式工具栏、移动端响应式标签页、HTML 安全清理，以及全平台统一的 `M↓` 应用图标。
+此外还包含中英文切换、多套阅读风格、可定制快捷键、Mermaid 模板、自动文档大纲、完整格式工具栏、移动端响应式标签页、HTML 安全清理，以及全平台统一的羽毛应用图标。
+
+> 桌面版提供工作区；Android 和 iOS 保持轻量的单文件模式，不显示工作区入口。
 
 ## 下载
 
-每个版本固定包含八个文件——四个平台分别提供程序压缩包和安装包。
+每个版本固定包含十个文件——桌面与移动平台分别提供便携包或安装包。
 
 | 平台 | 便携版 / 程序压缩包 | 安装包 | 说明 |
 | --- | --- | --- | --- |
 | Windows x64 | `windows-x64-portable.zip` | `windows-x64-setup.exe` | 使用系统已安装的 WebView2 Runtime。 |
 | macOS Universal | `macos-universal-app.zip` | `macos-universal.dmg` | 同时包含 Intel 与 Apple Silicon 程序。 |
 | Android | `android-app.zip` | `android.apk` | APK 使用项目固定发布密钥签名。 |
+| Linux | `linux-x64.tar.gz` | `linux-arm64.tar.gz` | 需要系统 WebKit/WebView 运行库。 |
 | iOS / iPadOS | `ios-app-unsigned.zip` | `ios-unsigned.ipa` | 安装前需要使用自己的 Apple 证书签名。 |
 
 > [!NOTE]
@@ -81,6 +85,7 @@ Feather Markdown 从一个明确的约束出发：**每个 Release 文件必须�
 | 保存 | `Ctrl+S` | `⌘S` |
 | 打开 | `Ctrl+O` | `⌘O` |
 | 新建文档 | `Ctrl+N` | `⌘N` |
+| 切换全屏 | `F11` | `F11` |
 | 显示 / 隐藏编辑器 | `Ctrl+Shift+E` | `⌘⇧E` |
 | 插入缩进 | `Tab` | `Tab` |
 
@@ -109,7 +114,7 @@ go test ./...
 - **Android：** JDK 17、Android SDK 35 和 Gradle 8.9。
 - **iOS：** 安装了 Xcode 与 [XcodeGen](https://github.com/yonaskolb/XcodeGen) 的 macOS。
 
-完整的四平台打包过程位于 [`.github/workflows/release.yml`](.github/workflows/release.yml)。
+完整的五平台打包过程位于 [`.github/workflows/release.yml`](.github/workflows/release.yml)。
 
 ## 如何保持轻量
 

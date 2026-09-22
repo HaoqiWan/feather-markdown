@@ -1,55 +1,45 @@
 #!/usr/bin/env python3
-"""Generate platform icon assets from Feather Markdown's geometric mark."""
+"""Generate platform icon assets from the user-provided Feather logo."""
 
+from functools import lru_cache
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TEAL = "#2f6f5e"
-CREAM = "#f7f3e8"
-GOLD = "#e1a85f"
+SOURCE = ROOT / "assets" / "feather-logo.png"
 
 
-def _point(value: float, scale: float) -> int:
-    return round(value * scale)
+@lru_cache(maxsize=1)
+def source_icon() -> Image.Image:
+    with Image.open(SOURCE) as source:
+        image = source.convert("RGBA")
+    side = max(image.size)
+    square = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    square.alpha_composite(image, ((side - image.width) // 2, (side - image.height) // 2))
+    return square
 
 
-def _rounded_line(draw: ImageDraw.ImageDraw, points, fill, width, scale):
-    scaled = [(_point(x, scale), _point(y, scale)) for x, y in points]
-    line_width = _point(width, scale)
-    draw.line(scaled, fill=fill, width=line_width, joint="curve")
-    radius = line_width // 2
-    for x, y in (scaled[0], scaled[-1]):
-        draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=fill)
+def render_icon(size: int, *, opaque: bool = False) -> Image.Image:
+    icon = source_icon().resize((size, size), Image.Resampling.LANCZOS)
+    if not opaque:
+        return icon
+
+    source = source_icon()
+    background_color = source.getpixel((source.width // 2, source.height // 10))[:3]
+    background = Image.new("RGBA", icon.size, (*background_color, 255))
+    return Image.alpha_composite(background, icon).convert("RGB")
 
 
-def render_icon(size: int, *, square_background: bool = False) -> Image.Image:
-    supersampling = 4
-    canvas_size = size * supersampling
-    scale = canvas_size / 512
-    image = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(image)
-    radius = 0 if square_background else _point(112, scale)
-    draw.rounded_rectangle((0, 0, canvas_size - 1, canvas_size - 1), radius=radius, fill=TEAL)
-    _rounded_line(draw, [(118, 364), (118, 148), (256, 278), (378, 148)], CREAM, 56, scale)
-    _rounded_line(draw, [(378, 148), (378, 336)], GOLD, 56, scale)
-    _rounded_line(draw, [(322, 298), (378, 360), (434, 298)], GOLD, 56, scale)
-    return image.resize((size, size), Image.Resampling.LANCZOS)
-
-
-def save_png(path: Path, size: int, *, square_background: bool = False):
+def save_png(path: Path, size: int, *, opaque: bool = False):
     path.parent.mkdir(parents=True, exist_ok=True)
-    icon = render_icon(size, square_background=square_background)
-    if square_background:
-        icon = icon.convert("RGB")
-    icon.save(path, optimize=True)
+    render_icon(size, opaque=opaque).save(path, optimize=True)
 
 
 def main():
-    save_png(ROOT / "web/icon-192.png", 192, square_background=True)
-    save_png(ROOT / "web/icon-512.png", 512, square_background=True)
+    save_png(ROOT / "web/icon-192.png", 192)
+    save_png(ROOT / "web/icon-512.png", 512)
 
     windows_icon = ROOT / "packaging/windows/FeatherMarkdown.ico"
     windows_icon.parent.mkdir(parents=True, exist_ok=True)
@@ -61,6 +51,17 @@ def main():
 
     mac_icon = ROOT / "packaging/macos/FeatherMarkdown.icns"
     render_icon(1024).save(mac_icon, format="ICNS")
+
+    android_icons = {
+        "mipmap-mdpi": 48,
+        "mipmap-hdpi": 72,
+        "mipmap-xhdpi": 96,
+        "mipmap-xxhdpi": 144,
+        "mipmap-xxxhdpi": 192,
+    }
+    android_res = ROOT / "mobile/android/app/src/main/res"
+    for density, pixels in android_icons.items():
+        save_png(android_res / density / "ic_launcher.png", pixels, opaque=True)
 
     app_icon = ROOT / "mobile/ios/Assets.xcassets/AppIcon.appiconset"
     ios_files = {
@@ -81,7 +82,7 @@ def main():
         "icon-1024.png": 1024,
     }
     for filename, pixels in ios_files.items():
-        save_png(app_icon / filename, pixels, square_background=True)
+        save_png(app_icon / filename, pixels, opaque=True)
 
 
 if __name__ == "__main__":

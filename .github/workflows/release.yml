@@ -141,6 +141,36 @@ jobs:
           path: release-assets/*
           if-no-files-found: error
 
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.x"
+          cache: true
+      - name: Build Linux x64 and ARM64 archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${RELEASE_VERSION#v}"
+          mkdir -p release-assets
+          for arch in amd64 arm64; do
+            directory="build/linux-$arch"
+            mkdir -p "$directory"
+            CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -buildvcs=false \
+              -ldflags="-s -w -buildid= -X main.version=$version" -o "$directory/FeatherMarkdown" .
+            cp README.md "$directory/README.md"
+            label="$arch"
+            if [ "$arch" = "amd64" ]; then label="x64"; fi
+            tar -C "$directory" -czf "release-assets/Feather-Markdown-v$version-linux-$label.tar.gz" .
+          done
+      - uses: actions/upload-artifact@v5
+        with:
+          name: release-linux
+          path: release-assets/*
+          if-no-files-found: error
+
   ios:
     runs-on: macos-latest
     steps:
@@ -177,7 +207,7 @@ jobs:
           if-no-files-found: error
 
   publish:
-    needs: [windows, macos, android, ios]
+    needs: [windows, macos, linux, android, ios]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
@@ -189,13 +219,13 @@ jobs:
           pattern: release-*
           path: release-assets
           merge-multiple: true
-      - name: Verify exactly eight release files
+      - name: Verify exactly ten release files
         shell: bash
         run: |
           set -euo pipefail
           find release-assets -maxdepth 1 -type f -printf '%f\n' | sort
           count=$(find release-assets -maxdepth 1 -type f | wc -l)
-          test "$count" -eq 8
+          test "$count" -eq 10
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

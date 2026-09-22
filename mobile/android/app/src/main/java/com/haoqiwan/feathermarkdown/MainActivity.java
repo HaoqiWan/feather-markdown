@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -45,7 +46,18 @@ public class MainActivity extends Activity {
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) settings.setSafeBrowsingEnabled(true);
 
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return handleNavigation(request.getUrl());
+            }
+
+            @Override
+            @SuppressWarnings("deprecation")
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return handleNavigation(Uri.parse(url));
+            }
+        });
         webView.setWebChromeClient(new WebChromeClient());
         webView.addJavascriptInterface(new NativeBridge(), "FeatherNative");
         webView.loadUrl("file:///android_asset/index.html");
@@ -77,14 +89,52 @@ public class MainActivity extends Activity {
                 startActivityForResult(intent, SAVE_DOCUMENT);
             });
         }
+
+        @JavascriptInterface
+        public void closeWindow() {
+            runOnUiThread(MainActivity.this::finish);
+        }
+
+        @JavascriptInterface
+        public void openExternal(String url) {
+            runOnUiThread(() -> openExternalLink(Uri.parse(url)));
+        }
+
+    }
+
+    private boolean handleNavigation(Uri uri) {
+        if ("file".equalsIgnoreCase(uri.getScheme()) && uri.getPath() != null
+                && uri.getPath().startsWith("/android_asset/")) return false;
+        openExternalLink(uri);
+        return true;
+    }
+
+    private void openExternalLink(Uri uri) {
+        String scheme = uri.getScheme();
+        if (!("http".equalsIgnoreCase(scheme)
+                || "https".equalsIgnoreCase(scheme)
+                || "mailto".equalsIgnoreCase(scheme))) {
+            showError("不支持打开此类型的链接");
+            return;
+        }
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+        } catch (Exception error) {
+            showError("无法使用系统应用打开链接");
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != RESULT_OK || data == null || data.getData() == null) return;
-        if (requestCode == OPEN_DOCUMENT) loadDocument(data.getData());
-        if (requestCode == SAVE_DOCUMENT) saveDocument(data.getData());
+        if (requestCode == SAVE_DOCUMENT) {
+            if (resultCode == RESULT_OK && data != null && data.getData() != null) saveDocument(data.getData());
+            else notifySaveComplete(false);
+            return;
+        }
+        if (requestCode == OPEN_DOCUMENT && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            loadDocument(data.getData());
+        }
     }
 
     private void loadDocument(Uri uri) {
@@ -112,10 +162,16 @@ public class MainActivity extends Activity {
             if (output == null) throw new IllegalStateException("无法写入文件");
             output.write(pendingSaveContent.getBytes(StandardCharsets.UTF_8));
             output.flush();
-            runOnUiThread(() -> Toast.makeText(this, "文档已保存", Toast.LENGTH_SHORT).show());
+            notifySaveComplete(true);
         } catch (Exception error) {
+            notifySaveComplete(false);
             showError(error.getMessage());
         }
+    }
+
+    private void notifySaveComplete(boolean success) {
+        String script = "window.featherSaveComplete(" + success + ")";
+        webView.post(() -> webView.evaluateJavascript(script, null));
     }
 
     private String displayName(Uri uri) {
@@ -141,7 +197,7 @@ public class MainActivity extends Activity {
     @Override
     public void onBackPressed() {
         if (webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
+        else webView.evaluateJavascript("window.featherRequestClose && window.featherRequestClose()", null);
     }
 
     @Override

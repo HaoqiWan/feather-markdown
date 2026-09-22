@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="web/icon.svg" width="112" height="112" alt="Feather Markdown logo">
+  <img src="web/icon-512.png" width="112" height="112" alt="Feather Markdown logo">
   <h1>Feather Markdown</h1>
   <p><strong>A tiny, read-first Markdown viewer with an editor when you need one.</strong></p>
   <p>Native windows · Live preview · Outline · LaTeX · Mermaid</p>
@@ -8,7 +8,7 @@
     <a href="https://github.com/HaoqiWan/feather-markdown/releases/latest"><img src="https://img.shields.io/github/v/release/HaoqiWan/feather-markdown?style=flat-square&color=2f6f5e" alt="Latest release"></a>
     <a href="https://github.com/HaoqiWan/feather-markdown/actions/workflows/release.yml"><img src="https://github.com/HaoqiWan/feather-markdown/actions/workflows/release.yml/badge.svg" alt="Release build"></a>
     <img src="https://img.shields.io/badge/package-%3C%2010%20MiB-e1a85f?style=flat-square" alt="Package size under 10 MiB">
-    <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Android%20%7C%20iOS-59615d?style=flat-square" alt="Supported platforms">
+    <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Android%20%7C%20iOS-59615d?style=flat-square" alt="Supported platforms">
   </p>
   <p>
     <a href="https://github.com/HaoqiWan/feather-markdown/releases/latest"><strong>Download the latest release</strong></a>
@@ -29,19 +29,23 @@ Feather Markdown is designed around one constraint: **every release asset must s
 | **Rich Markdown** | GFM tables, task lists, KaTeX math, LaTeX delimiters, and Mermaid diagrams. |
 | **Adaptive layout** | Drag desktop dividers, wrap the formatting toolbar, and scroll wide tables without breaking the page. |
 | **Native app shells** | WebView2 on Windows, WKWebView on Apple platforms, and Android WebView on Android. |
-| **Local-file workflow** | Open and save documents on every platform; desktop `-file` mode also watches external changes. |
+| **Local-file workflow** | Open and save on every platform; desktop builds can also use a local folder as a nested notes workspace. |
+| **Complete export** | Export portable Markdown, print, PDF, or a long PNG while keeping local images in standard relative paths. |
 
-Also included: light/dark/system themes, an automatically generated outline, a complete formatting toolbar, responsive mobile tabs, sanitized Markdown HTML, and the cross-platform `M↓` application icon.
+Also included: Chinese/English switching, multiple reading styles, customizable shortcuts, Mermaid templates, an automatically generated outline, a complete formatting toolbar, responsive mobile tabs, sanitized Markdown HTML, and the cross-platform feather icon.
+
+> Workspaces are a desktop feature. Android and iOS keep the lighter single-document workflow and do not show workspace controls.
 
 ## Downloads
 
-Each release contains exactly eight assets—one archive and one installable package for each platform.
+Each release contains exactly ten assets—portable archives or installers for desktop and mobile platforms.
 
 | Platform | Portable / app archive | Installer | Notes |
 | --- | --- | --- | --- |
 | Windows x64 | `windows-x64-portable.zip` | `windows-x64-setup.exe` | Uses the installed WebView2 Runtime. |
 | macOS Universal | `macos-universal-app.zip` | `macos-universal.dmg` | Includes Intel and Apple Silicon binaries. |
 | Android | `android-app.zip` | `android.apk` | APK is signed with the project's release key. |
+| Linux | `linux-x64.tar.gz` | `linux-arm64.tar.gz` | Requires the system WebKit/WebView runtime. |
 | iOS / iPadOS | `ios-app-unsigned.zip` | `ios-unsigned.ipa` | Requires signing with your Apple certificate before installation. |
 
 > [!NOTE]
@@ -81,6 +85,7 @@ To open, watch, and save a specific file on desktop:
 | Save | `Ctrl+S` | `⌘S` |
 | Open | `Ctrl+O` | `⌘O` |
 | New document | `Ctrl+N` | `⌘N` |
+| Toggle fullscreen | `F11` | `F11` |
 | Show / hide editor | `Ctrl+Shift+E` | `⌘⇧E` |
 | Insert indentation | `Tab` | `Tab` |
 
@@ -109,7 +114,7 @@ Additional mobile requirements:
 - **Android:** JDK 17, Android SDK 35, and Gradle 8.9.
 - **iOS:** macOS with Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
-The complete four-platform packaging process lives in [`.github/workflows/release.yml`](.github/workflows/release.yml).
+The complete five-platform packaging process lives in [`.github/workflows/release.yml`](.github/workflows/release.yml).
 
 ## How it stays small
 
